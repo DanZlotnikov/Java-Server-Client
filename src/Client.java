@@ -3,6 +3,7 @@ import java.awt.event.ActionListener;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.*;
@@ -12,8 +13,8 @@ import javax.swing.*;
 public class Client {
 
     private BufferedReader dataIn;
-    private PrintWriter dataOut;
-    private JFrame frame = new JFrame("Mr. App");
+    private ObjectOutputStream dataOut;
+    private final JFrame frame = new JFrame("Mr. App");
     private JTextField dataField = new JTextField(40);
     private JTextArea messageArea = new JTextArea(8, 60);
     Socket socket;
@@ -25,7 +26,7 @@ public class Client {
      */
     public Client() {
     	
-    	JFrame frame=new JFrame("Mr. Java");  
+    	final JFrame frame=new JFrame("Mr. Java");  
         final JTextField textfield=new JTextField();  
         textfield.setBounds(50,50, 150,20); 
         
@@ -33,7 +34,7 @@ public class Client {
         addUserButton.setBounds(20,100,120,30);  
         addUserButton.addActionListener(new ActionListener(){  
     public void actionPerformed(ActionEvent e){  
-                AddUserScreen(frame);
+                AddUserScreen();
             }  
         });  
         
@@ -41,7 +42,7 @@ public class Client {
         updateUserButton.setBounds(160,100,120,30);  
         updateUserButton.addActionListener(new ActionListener(){  
     public void actionPerformed(ActionEvent e){  
-    	 		UpdateUserScreen(frame);
+    	 		UpdateUserScreen();
             }  
         });  
         
@@ -49,7 +50,7 @@ public class Client {
         deleteUserButton.setBounds(300,100,120,30);  
         deleteUserButton.addActionListener(new ActionListener(){  
     public void actionPerformed(ActionEvent e){  
-    			DeleteUserScreen(frame); 
+    			DeleteUserScreen(); 
             }  
         });  
         
@@ -61,11 +62,10 @@ public class Client {
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);   
     }
-    
-    
-    public void AddUserScreen(JFrame frame)
+
+    public void AddUserScreen()
     {
-    	frame=new JFrame("Add User");  
+    	JFrame frame=new JFrame("Add User");  
         HashMap<String, String> formData = new HashMap<String, String>();
     	
     	final JLabel usernameHebrewLabel = new JLabel("Username (Hebrew): ");
@@ -116,9 +116,16 @@ public class Client {
                 formData.put("number", number.getText());
                 formData.put("phone", phone.getText());
                 formData.put("activeCode", activeCodes.getSelectedItem().toString());
-                ServerFunctions.AddUser(socket, formData);
-            	}  
-        	}); 
+                
+                try {
+					dataOut.writeObject(formData);
+					dataOut.flush();
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+                frame.dispose();
+           	}  
+        }); 
         frame.add(addUserButton);frame.add(usernameHebrew);frame.add(usernameEnglish);frame.add(city);frame.add(street);frame.add(number);frame.add(phone);frame.add(activeCodes);
         frame.add(usernameHebrewLabel);frame.add(usernameEnglishLabel);frame.add(cityLabel);frame.add(streetLabel);frame.add(numberLabel);frame.add(phoneLabel);frame.add(activeCodesLabel);   
         frame.setSize(400,400);  
@@ -128,10 +135,10 @@ public class Client {
         
     }
     
-    public void UpdateUserScreen(JFrame frame)
+    public void UpdateUserScreen()
     {
-    	frame=new JFrame("Update User");  
-    	HashMap<String, String> formData = new HashMap<String, String>();
+    	JFrame frame=new JFrame("Add User");  
+        HashMap<String, String> formData = new HashMap<String, String>();
     	
     	final JLabel usernameHebrewLabel = new JLabel("Username (Hebrew): ");
     	usernameHebrewLabel.setBounds(10,20, 150,20);
@@ -170,10 +177,9 @@ public class Client {
         final JComboBox<String> activeCodes = new JComboBox<String>(choices);
         activeCodes.setBounds(150,200, 150,20);
         
-        
-        JButton updateUserButton=new JButton("Update User");  
-        updateUserButton.setBounds(10,250,150,30);  
-        updateUserButton.addActionListener(new ActionListener(){  
+        JButton addUserButton=new JButton("Add User");  
+        addUserButton.setBounds(10,250,150,30);  
+        addUserButton.addActionListener(new ActionListener(){  
         	public void actionPerformed(ActionEvent e){  
     			formData.put("usernameHebrew", usernameHebrew.getText());
                 formData.put("usernameEnglish", usernameEnglish.getText());
@@ -182,20 +188,28 @@ public class Client {
                 formData.put("number", number.getText());
                 formData.put("phone", phone.getText());
                 formData.put("activeCode", activeCodes.getSelectedItem().toString());
-            }  
+                
+                try {
+					dataOut.writeObject(formData);
+					dataOut.flush();
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+                frame.dispose();
+           	}  
         }); 
-        
-        frame.add(updateUserButton);frame.add(usernameHebrew);frame.add(usernameEnglish);frame.add(city);frame.add(street);frame.add(number);frame.add(phone);frame.add(activeCodes);
+        frame.add(addUserButton);frame.add(usernameHebrew);frame.add(usernameEnglish);frame.add(city);frame.add(street);frame.add(number);frame.add(phone);frame.add(activeCodes);
         frame.add(usernameHebrewLabel);frame.add(usernameEnglishLabel);frame.add(cityLabel);frame.add(streetLabel);frame.add(numberLabel);frame.add(phoneLabel);frame.add(activeCodesLabel);   
         frame.setSize(400,400);  
         frame.setLayout(null); 
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);  
+        
     }
     
-    public void DeleteUserScreen(JFrame frame)
+    public void DeleteUserScreen()
     {
-    	frame=new JFrame("Delete User");  
+    	JFrame frame=new JFrame("Delete User");  
         final JTextField textfield=new JTextField();  
         textfield.setBounds(50,50, 150,20);  
         JButton b=new JButton("Delete User");  
@@ -221,14 +235,13 @@ public class Client {
      */
     public void connectToServer() throws IOException {
 
-        // Get the server address from a dialog box.
         String serverAddress = "127.0.0.1";
 
         // Make connection and initialize streams
         this.socket = new Socket(serverAddress, 5050);
         dataIn = new BufferedReader(
                 new InputStreamReader(socket.getInputStream()));
-        dataOut = new PrintWriter(socket.getOutputStream(), true);
+        dataOut =  new ObjectOutputStream(socket.getOutputStream());
     }
 
     /**

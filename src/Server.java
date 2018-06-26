@@ -1,15 +1,19 @@
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Server {
 
     /**
      * Application method to run the server runs in an infinite loop
-     * listening on port 9898.  When a connection is requested, it
+     * listening on port 5050.  When a connection is requested, it
      * spawns a new thread to do the servicing and immediately returns
      * to listening.  The server keeps a unique client number for each
      * client that connects just to show interesting logging
@@ -48,32 +52,37 @@ public class Server {
          * client a welcome message then repeatedly reading strings
          * and sending back the capitalized version of the string.
          */
-        public void run() {
+        @SuppressWarnings("unchecked")
+		public void run() {
             try {
 
                 // Decorate the streams so we can send characters
                 // and not just bytes.  Ensure output is flushed
                 // after every newline.
-                BufferedReader in = new BufferedReader(
-                        new InputStreamReader(socket.getInputStream()));
-                PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+            	ObjectInputStream dataIn = new ObjectInputStream(socket.getInputStream());
+            	ObjectOutputStream dataOut = new ObjectOutputStream(socket.getOutputStream());
 
                 // Send a welcome message to the client.
-                out.println("Hello, you are client #" + clientNumber + ".");
-                out.println("Enter a line with only a period to quit\n");
+            	dataOut.writeChars("Hello, you are client #" + clientNumber + ".");
+            	dataOut.writeChars("Enter a line with only a period to quit\n");
 
-                // Get messages from the client, line by line; return them
+                // Get objects from client
                 while (true) {
-                    String input = in.readLine();
-                    if (input == null || input.equals(".")) {
-                        break;
+                    HashMap<String, String> formData = new HashMap<String, String>();
+                    formData = (HashMap<String, String>)dataIn.readObject();
+                    
+                    for (HashMap.Entry<String, String> entry : formData.entrySet()) {
+                        String key = entry.getKey();
+                        String value = entry.getValue();
+                        log (key + ": " + value);
                     }
-                    log(input);
-                    out.println("Client #" + clientNumber + ": " + input);
+                    
                 }
             } catch (IOException e) {
                 log("Error handling client# " + clientNumber + ": " + e);
-            } finally {
+            } catch (ClassNotFoundException e) {
+            	log("Error handling client# " + clientNumber + ": " + e);
+			} finally {
                 try {
                     socket.close();
                 } catch (IOException e) {
