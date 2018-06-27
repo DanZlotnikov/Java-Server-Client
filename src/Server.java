@@ -77,6 +77,12 @@ public class Server {
                         log (key + ": " + value);
                     }
                     
+                    if (formData.get("dbAction").equals("add"))
+                    	dbActions.dbInsert(formData);
+                    
+                    if (formData.get("dbAction").equals("update"))
+                    	dbActions.dbUpdate(Integer.parseInt(formData.get("userCode")), formData);
+                    
                 }
             } catch (IOException e) {
                 log("Error handling client# " + clientNumber + ": " + e);
