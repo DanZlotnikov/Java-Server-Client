@@ -1,5 +1,6 @@
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.SimpleDateFormat;
@@ -45,10 +46,11 @@ public class Try1 {
 		      new SimpleDateFormat ("yyyy-MM-dd hh:mm:ss");
 		      String dateTime = ft.format(dNow);
 		      
-		      String sql = String.format("update customers set hebrewName = '%1$s', englishName = '%2$s', city = '%3$s', street = '%4$s', stNumber = '%5$s', phone = '%6$s', activeCode = '%7$d', modificationDate = '%8$s'    ","update", "UPDATE", "myCity", "myStreet", "23", "123123123", 0, dateTime ) 
-		    		  + " where id = 5";
-		      stmt.executeUpdate(sql);
-
+		      String sql = "select * from customers where id = 18";
+		      ResultSet customers = stmt.executeQuery(sql);
+		      if(customers.first())
+		    	  System.out.println("yes");
+		      
 		      System.out.println("Inserted records into the table!");
 
 		   }catch(SQLException se){
